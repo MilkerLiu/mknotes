@@ -1,0 +1,231 @@
+{
+  "name": "mknote",
+  "displayName": "mknote",
+  "description": "note",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:mknote.helloWorld"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "configuration": {
+      "type": "object",
+      "title": "MKNotes configuration",
+      "properties": {
+        "mknote.location": {
+          "type": "string",
+          "default": "",
+          "scope": "application",
+          "description": "mknote location"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "mknote.newItem",
+        "title": "New File",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "mknote.newGroup",
+        "title": "New Group",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "mknote.refresh",
+        "title": "Refresh",
+        "icon": "$(extensions-refresh)"
+      },
+      {
+        "command": "mknote.renameItem",
+        "title": "Rename"
+      },
+      {
+        "command": "mknote.deleteItem",
+        "title": "Delete"
+      },
+      {
+        "command": "mknote.copy",
+        "title": "Copy"
+      },
+      {
+        "command": "mknote.cut",
+        "title": "Cut"
+      },
+      {
+        "command": "mknote.paste",
+        "title": "Paste"
+      },
+      {
+        "command": "mknote.revealInFinder",
+        "title": "Reveal In Finder"
+      },
+      {
+        "command": "mknote.repo.sync",
+        "title": "Sync",
+        "icon": "$(cloud)"
+      },
+      {
+        "command": "mknote.newWindow",
+        "title": "Open In New Window",
+        "icon": "$(window)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "notes",
+          "title": "MKNotes",
+          "icon": "$(output-view-icon)"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "fileExplorer",
+        "contents": "In order to use MKNOTE, you can open a folder or clone from a URL.\n[Open Folder](command:mknote.setFolder)\n[Clone Repository](command:mknote.repo.setup)",
+        "when": "location == ''"
+      }
+    ],
+    "views": {
+      "notes": [
+        {
+          "id": "fileExplorer",
+          "name": "Notes",
+          "icon": "breakpoints-activate"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "mknote.newItem",
+          "when": "view == fileExplorer",
+          "group": "navigation@1"
+        },
+        {
+          "command": "mknote.newGroup",
+          "when": "view == fileExplorer",
+          "group": "navigation@2"
+        },
+        {
+          "command": "mknote.refresh",
+          "when": "view == fileExplorer",
+          "group": "navigation@3"
+        },
+        {
+          "command": "mknote.repo.sync",
+          "when": "view == fileExplorer",
+          "group": "navigation@4"
+        },
+        {
+          "command": "mknote.newWindow",
+          "when": "view == fileExplorer",
+          "group": "navigation@4"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "mknote.newItem",
+          "group": "1",
+          "when": "view == fileExplorer"
+        },
+        {
+          "command": "mknote.newGroup",
+          "group": "1",
+          "when": "view == fileExplorer"
+        },
+        {
+          "command": "mknote.renameItem",
+          "when": "view == fileExplorer",
+          "group": "1"
+        },
+        {
+          "command": "mknote.copy",
+          "when": "view == fileExplorer",
+          "group": "2"
+        },
+        {
+          "command": "mknote.cut",
+          "when": "view == fileExplorer",
+          "group": "2"
+        },
+        {
+          "command": "mknote.paste",
+          "when": "view == fileExplorer && sel_files",
+          "group": "2"
+        },
+        {
+          "command": "mknote.revealInFinder",
+          "when": "view == fileExplorer",
+          "group": "3"
+        },
+        {
+          "command": "mknote.deleteItem",
+          "when": "view == fileExplorer",
+          "group": "4"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "mknote.copy",
+        "key": "ctrl+c",
+        "mac": "cmd+c"
+      },
+      {
+        "command": "mknote.cut",
+        "key": "ctrl+x",
+        "mac": "cmd+x"
+      },
+      {
+        "command": "mknote.paste",
+        "key": "ctrl+v",
+        "mac": "cmd+v"
+      }
+    ]
+  },
+  "scripts": {
+    "mkdirp": "^0.5.1",
+    "rimraf": "^2.6.2",
+    "vscode:prepublish": "yarn run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "yarn run compile-tests && yarn run compile && yarn run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "extensionDependencies": [
+    "vscode.git"
+  ],
+  "devDependencies": {
+    "@types/glob": "^8.0.0",
+    "@types/mkdirp": "^0.5.2",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "16.x",
+    "@types/rimraf": "^2.0.2",
+    "@types/vscode": "^1.74.0",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "@vscode/test-electron": "^2.2.0",
+    "eslint": "^8.28.0",
+    "glob": "^8.0.3",
+    "mocha": "^10.1.0",
+    "ts-loader": "^9.4.1",
+    "typescript": "^4.9.3",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.0"
+  },
+  "dependencies": {
+    "open": "^8.4.0"
+  }
+}
