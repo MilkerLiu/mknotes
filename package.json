@@ -12,6 +12,7 @@
   "activationEvents": [
     "onCommand:mknote.helloWorld"
   ],
+  "repository": "https://github.com/MilkerLiu/mknotes.git",
   "main": "./dist/extension.js",
   "contributes": {
     "configuration": {
