@@ -2,7 +2,7 @@
 
 A sidebar notebook.
 
-![](./asserts//intro.png)
+![intro](https://user-images.githubusercontent.com/5998498/210298425-4f5b16cf-4bca-4bbe-9e9d-f2f455282b5f.png)
 
 Features:
 
