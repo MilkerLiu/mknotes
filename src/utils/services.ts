@@ -1,16 +1,16 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 /**
  * 封装一些常用的工具函数
  */
-
 import * as vscode from 'vscode';
 
 export class Service {
-    static instance: Service
-    static context: vscode.ExtensionContext
-    static viewId: string
+    static instance: Service;
+    static context: vscode.ExtensionContext;
+    static viewId: string;
     static setup(context: vscode.ExtensionContext) {
-        this.instance = new this(context)
-        this.context = context
+        this.instance = new this(context);
+        this.context = context;
     }
     protected constructor(context: vscode.ExtensionContext) {
     }
@@ -27,19 +27,23 @@ export class Service {
  * register a commnad bind a target functions
  * like @Command("xxx.action")
  * @param cmd the command
+ * @param useContext make command in context
  * @returns 
  */
-export function Command(cmd: string): any {
+export function Command(cmd: string, useContext?: boolean): any {
     return function (target: any, methodName: string, descriptor: PropertyDescriptor) {
-        const originMethod = descriptor.value
-        vscode.commands.registerCommand(cmd, (...args: any) => {
-            originMethod.call(target.constructor.instance, args)
+        const originMethod = descriptor.value;
+        const dis = vscode.commands.registerCommand(cmd, (...args: any) => {
+            originMethod.call(target.constructor.instance, args);
         });
+        if (useContext) {
+            target.constructor.context.push(dis);
+        }
         return descriptor;
     };
 }
 
-export type IRunLoading = vscode.ProgressOptions
+export type IRunLoading = vscode.ProgressOptions;
 
 export function RunLoading(opt?: IRunLoading): any {
     return function (target: any, methodName: string, descriptor: PropertyDescriptor) {

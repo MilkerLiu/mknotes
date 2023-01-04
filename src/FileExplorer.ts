@@ -1,3 +1,4 @@
+/* eslint-disable no-throw-literal */
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -115,24 +116,24 @@ namespace _ {
 
     export function move(src: string, targetDir: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            const targetPath = path.join(targetDir, path.parse(src).base)
+            const targetPath = path.join(targetDir, path.parse(src).base);
             if (fs.existsSync(targetPath)) {
-                resolve()
+                resolve();
             } else {
                 fs.rename(src, targetPath, error => handleResult(resolve, reject, error, void 0));
             }
-        })
+        });
     }
 
     export function copy(src: string, targetDir: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            const targetPath = path.join(targetDir, path.parse(src).base)
+            const targetPath = path.join(targetDir, path.parse(src).base);
             if (fs.existsSync(targetPath)) {
-                resolve()
+                resolve();
             } else {
                 fs.copyFile(src, targetPath, error => handleResult(resolve, reject, error, void 0));
             }
-        })
+        });
     }
 }
 
@@ -179,65 +180,65 @@ interface Entry {
 const IGNORES = [
     '.git',
     '.DS_Store'
-]
+];
 
 export default class FileExplorer extends Service implements
     vscode.TreeDataProvider<Entry>,
     vscode.TreeDragAndDropController<Entry> {
 
-    treeView: vscode.TreeView<Entry>
+    treeView: vscode.TreeView<Entry>;
 
     private _onDidChangeTreeData: vscode.EventEmitter<Entry | undefined> = new vscode.EventEmitter<Entry | undefined>();
     readonly onDidChangeTreeData: vscode.Event<Entry | undefined> = this._onDidChangeTreeData.event;
 
-    static get mimeKey() { return `application/vnd.code.tree.${this.viewId}` }
+    static get mimeKey() { return `application/vnd.code.tree.${this.viewId}`; }
 
     dropMimeTypes = [FileExplorer.mimeKey];
     dragMimeTypes = ['text/uri-list'];
 
     protected constructor(context: vscode.ExtensionContext) {
-        super(context)
-        FileExplorer.viewId = 'fileExplorer'
-        this.setContext('location', Config.location)
+        super(context);
+        FileExplorer.viewId = 'fileExplorer';
+        this.setContext('location', Config.location);
         this.treeView = vscode.window.createTreeView(FileExplorer.viewId, {
             treeDataProvider: this,
             showCollapseAll: true,
             canSelectMany: true,
             dragAndDropController: this
-        })
+        });
     }
 
     get currentItem() {
         if (this.treeView.selection.length > 0) {
-            return this.treeView.selection.at(this.treeView.selection.length - 1)
+            return this.treeView.selection.at(this.treeView.selection.length - 1);
         }
-        return undefined
+        return undefined;
     }
 
     get currentItemParentDir() {
-        let currentItem = this.currentItem
+        let currentItem = this.currentItem;
         if (currentItem) {
-            return vscode.Uri.joinPath(currentItem.uri, '..')
+            return vscode.Uri.joinPath(currentItem.uri, '..');
         }
-        return vscode.Uri.file(Config.location)
+        return vscode.Uri.file(Config.location);
     }
 
     get currentDir() {
-        let currentItem = this.currentItem
+        let currentItem = this.currentItem;
         if (!currentItem) {
-            return vscode.Uri.file(Config.location)
-        } else if (currentItem?.type == vscode.FileType.Directory) {
-            return currentItem.uri
+            return vscode.Uri.file(Config.location);
+        } else if (currentItem?.type === vscode.FileType.Directory) {
+            return currentItem.uri;
         } else {
-            return vscode.Uri.joinPath(currentItem.uri, '..')
+            return vscode.Uri.joinPath(currentItem.uri, '..');
         }
     }
 
     private async checkExist(fileUri: vscode.Uri) {
         if (await _.exists(fileUri.path)) {
-            throw "A note with that name already exists."
+            throw "A note with that name already exists.";
         }
-        return fileUri
+        return fileUri;
     }
 
     async _stat(path: string): Promise<vscode.FileStat> {
@@ -265,8 +266,8 @@ export default class FileExplorer extends Service implements
     }
 
     handleDrop?(target: Entry | undefined, dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): void | Thenable<void> {
-        const transferItem = dataTransfer.get(FileExplorer.viewId)
-        this.move(target, transferItem?.value as Entry[] ?? [])
+        const transferItem = dataTransfer.get(FileExplorer.viewId);
+        this.move(target, transferItem?.value as Entry[] ?? []);
     }
 
     // TREE PROVIDER
@@ -275,9 +276,9 @@ export default class FileExplorer extends Service implements
             const children = await this.readDirectory(element.uri);
             return children.filter(([name, type]) => IGNORES.indexOf(name) < 0).map(([name, type]) => ({ uri: vscode.Uri.file(path.join(element.uri.fsPath, name)), type }));
         }
-        const dir: string = vscode.workspace.getConfiguration('mknote').get('location') ?? ""
-        if (dir.length == 0) return []
-        const workspaceUri = vscode.Uri.file(dir)
+        const dir: string = vscode.workspace.getConfiguration('mknote').get('location') ?? "";
+        if (dir.length === 0) { return []; }
+        const workspaceUri = vscode.Uri.file(dir);
         const children = await this.readDirectory(workspaceUri);
         children.sort((a, b) => {
             if (a[1] === b[1]) {
@@ -305,27 +306,27 @@ export default class FileExplorer extends Service implements
         Dialog.chooseFolder()
             .then(location => Config.updateLocation(location))
             .then(() => Dialog.showWarningMessage(`You must reload the window for the storage location change to take effect.`))
-            .then(res => res == 'Yes' && vscode.commands.executeCommand('workbench.action.reloadWindow'))
+            .then(res => res === 'Yes' && vscode.commands.executeCommand('workbench.action.reloadWindow'));
     }
 
     @Command("mknote.refresh")
     refresh() {
-        this._onDidChangeTreeData.fire(undefined)
+        this._onDidChangeTreeData.fire(undefined);
     }
 
     @Command('mknote.openFile')
     openFile(resource: vscode.Uri[]): void {
-        vscode.commands.executeCommand('vscode.open', resource[0])
+        vscode.commands.executeCommand('vscode.open', resource[0]);
     }
 
     @Command('mknote.revealInFinder')
     revealInFinder(resource: Entry[]): void {
-        if (!resource || resource.length == 0) return
-        let res = resource[0]
-        if (res.type == vscode.FileType.Directory) {
-            open(resource[0].uri.path)
+        if (!resource || resource.length === 0) { return; };
+        let res = resource[0];
+        if (res.type === vscode.FileType.Directory) {
+            open(resource[0].uri.path);
         } else {
-            open(path.resolve(resource[0].uri.path, '..'))
+            open(path.resolve(resource[0].uri.path, '..'));
         }
     }
 
@@ -338,7 +339,7 @@ export default class FileExplorer extends Service implements
             .then(fileUri => this.openFile([fileUri]))
             .then(() => vscode.commands.executeCommand('cursorMove', { 'to': 'viewPortBottom' }))
             .catch(err => Dialog.showErrorMessage(err))
-            .finally(() => this.refresh())
+            .finally(() => this.refresh());
     }
 
     @Command("mknote.newGroup")
@@ -347,46 +348,46 @@ export default class FileExplorer extends Service implements
             .then(name => vscode.Uri.joinPath(this.currentDir, name))
             .then(uri => this.checkExist(uri))
             .then(groupUri => {
-                return _.mkdir(groupUri.path)
+                return _.mkdir(groupUri.path);
             })
             .catch(err => Dialog.showErrorMessage(err))
-            .finally(() => this.refresh())
+            .finally(() => this.refresh());
     }
 
     @Command("mknote.renameItem")
     renameItem() {
         if (!this.currentItem) {
-            return
+            return;
         }
-        const oldPath = this.currentItem.uri.path
-        const oldName = path.parse(oldPath).base
+        const oldPath = this.currentItem.uri.path;
+        const oldName = path.parse(oldPath).base;
         Dialog.showInputBox("New Name", oldName)
             .then(name => vscode.Uri.joinPath(this.currentItemParentDir, name))
             .then(uri => this.checkExist(uri))
             .then(fileUri => {
-                return _.rename(oldPath, fileUri.path)
+                return _.rename(oldPath, fileUri.path);
             })
             .catch(err => Dialog.showErrorMessage(err))
-            .finally(() => this.refresh())
+            .finally(() => this.refresh());
     }
 
     @Command("mknote.deleteItem")
     deleteItem() {
-        const files = this.treeView.selection
-        if (files.length == 0) {
-            return
+        const files = this.treeView.selection;
+        if (files.length === 0) {
+            return;
         }
-        const allFiles = files.map(e => path.parse(e.uri.path).base).join("\n")
+        const allFiles = files.map(e => path.parse(e.uri.path).base).join("\n");
         Dialog.showWarningMessage(`Are you sure you want to delete '${allFiles}'?`)
             .then(res => {
                 if (res === 'Yes') {
-                    return Promise.all(files.map(e => _.rmrf(e.uri.path))).then(() => true)
+                    return Promise.all(files.map(e => _.rmrf(e.uri.path))).then(() => true);
                 }
-                return false
+                return false;
             })
-            .then(code => { code && vscode.window.showInformationMessage(`Successfully deleted ${allFiles}.`) })
+            .then(code => { code && vscode.window.showInformationMessage(`Successfully deleted ${allFiles}.`); })
             .catch(err => Dialog.showErrorMessage(err))
-            .finally(() => this.refresh())
+            .finally(() => this.refresh());
     }
 
     @RunLoading()
@@ -394,52 +395,52 @@ export default class FileExplorer extends Service implements
         target = target ?? {
             uri: vscode.Uri.file(Config.location),
             type: vscode.FileType.Directory
-        } as Entry
-        const targetDir = target?.type == vscode.FileType.Directory ? target.uri : vscode.Uri.joinPath(target?.uri!, "..")
-        return Promise.all(sources.map(e => _.move(e.uri.path, targetDir.path))).then(() => this.refresh())
+        } as Entry;
+        const targetDir = target?.type === vscode.FileType.Directory ? target.uri : vscode.Uri.joinPath(target?.uri!, "..");
+        return Promise.all(sources.map(e => _.move(e.uri.path, targetDir.path))).then(() => this.refresh());
     }
     @RunLoading()
     copy(target: Entry | undefined, sources: Entry[]) {
         target = target ?? {
             uri: vscode.Uri.file(Config.location),
             type: vscode.FileType.Directory
-        } as Entry
-        const targetDir = target?.type == vscode.FileType.Directory ? target.uri : vscode.Uri.joinPath(target?.uri!, "..")
-        return Promise.all(sources.map(e => _.copy(e.uri.path, targetDir.path))).then(() => this.refresh())
+        } as Entry;
+        const targetDir = target?.type === vscode.FileType.Directory ? target.uri : vscode.Uri.joinPath(target?.uri!, "..");
+        return Promise.all(sources.map(e => _.copy(e.uri.path, targetDir.path))).then(() => this.refresh());
     }
 
-    isCopy = false
-    _selectedFiles: Entry[] = []
-    get selectedFiles() { return this._selectedFiles }
-    set selectedFiles(v: Entry[]) { this._selectedFiles = v; this.setContext('sel_files', this._selectedFiles.length > 0) }
+    isCopy = false;
+    _selectedFiles: Entry[] = [];
+    get selectedFiles() { return this._selectedFiles; }
+    set selectedFiles(v: Entry[]) { this._selectedFiles = v; this.setContext('sel_files', this._selectedFiles.length > 0); }
 
     @Command('mknote.copy')
-    async c_copy() {
-        this.selectedFiles = [...this.treeView.selection]
-        this.isCopy = true
+    async cmdCopy() {
+        this.selectedFiles = [...this.treeView.selection];
+        this.isCopy = true;
     }
     @Command('mknote.cut')
-    async c_cut() {
-        this.isCopy = false
-        this.selectedFiles = [...this.treeView.selection]
+    async cmdCut() {
+        this.isCopy = false;
+        this.selectedFiles = [...this.treeView.selection];
     }
 
     @Command('mknote.paste')
-    async c_paste() {
-        if (this.selectedFiles.length == 0) return
+    async cmdPaste() {
+        if (this.selectedFiles.length === 0) { return; };
         if (this.isCopy) {
-            await this.copy(this.currentItem, this.selectedFiles)
+            await this.copy(this.currentItem, this.selectedFiles);
         } else {
-            await this.move(this.currentItem, this.selectedFiles)
+            await this.move(this.currentItem, this.selectedFiles);
         }
-        this.isCopy = false
-        this.selectedFiles = []
+        this.isCopy = false;
+        this.selectedFiles = [];
     }
 
 
     @Command('mknote.newWindow')
     openInNewWindow() {
-        vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(Config.location))
+        vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(Config.location));
     }
 
 }

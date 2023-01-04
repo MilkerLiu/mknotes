@@ -1,16 +1,15 @@
 {
   "name": "mknote",
-  "displayName": "mknote",
-  "description": "note",
-  "version": "0.0.1",
+  "displayName": "MKNotes",
+  "description": "notebook with git sync",
+  "version": "1.0.4",
   "engines": {
     "vscode": "^1.74.0"
   },
+  "publisher": "MilkerLiu",
+  "icon": "icon.png",
   "categories": [
     "Other"
-  ],
-  "activationEvents": [
-    "onCommand:mknote.helloWorld"
   ],
   "repository": "https://github.com/MilkerLiu/mknotes.git",
   "main": "./dist/extension.js",
@@ -69,7 +68,7 @@
       },
       {
         "command": "mknote.repo.sync",
-        "title": "Sync",
+        "title": "MKNote: Sync",
         "icon": "$(cloud)"
       },
       {
@@ -104,6 +103,48 @@
       ]
     },
     "menus": {
+      "commandPalette": [
+        {
+          "command": "mknote.newItem",
+          "when": "false"
+        },
+        {
+          "command": "mknote.newGroup",
+          "when": "false"
+        },
+        {
+          "command": "mknote.renameItem",
+          "when": "false"
+        },
+        {
+          "command": "mknote.deleteItem",
+          "when": "false"
+        },
+        {
+          "command": "mknote.newWindow",
+          "when": "false"
+        },
+        {
+          "command": "mknote.copy",
+          "when": "false"
+        },
+        {
+          "command": "mknote.cut",
+          "when": "false"
+        },
+        {
+          "command": "mknote.paste",
+          "when": "false"
+        },
+        {
+          "command": "mknote.refresh",
+          "when": "false"
+        },
+        {
+          "command": "mknote.revealInFinder",
+          "when": "false"
+        }
+      ],
       "view/title": [
         {
           "command": "mknote.newItem",
@@ -178,17 +219,20 @@
       {
         "command": "mknote.copy",
         "key": "ctrl+c",
-        "mac": "cmd+c"
+        "mac": "cmd+c",
+        "when": "view == fileExplorer"
       },
       {
         "command": "mknote.cut",
         "key": "ctrl+x",
-        "mac": "cmd+x"
+        "mac": "cmd+x",
+        "when": "view == fileExplorer"
       },
       {
         "command": "mknote.paste",
         "key": "ctrl+v",
-        "mac": "cmd+v"
+        "mac": "cmd+v",
+        "when": "view == fileExplorer"
       }
     ]
   },
