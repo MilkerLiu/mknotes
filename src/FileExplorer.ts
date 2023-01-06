@@ -179,7 +179,8 @@ interface Entry {
 
 const IGNORES = [
     '.git',
-    '.DS_Store'
+    '.DS_Store',
+    '.sort',
 ];
 
 export default class FileExplorer extends Service implements
@@ -260,6 +261,36 @@ export default class FileExplorer extends Service implements
         return Promise.resolve(result);
     }
 
+    async sortRules(dir: string) {
+        try {
+            const res = await _.readfile(path.join(dir, '.sort'));
+            return res.toString().split("\n");
+        } catch {
+            return [];
+        }
+    }
+
+    async parseTreeList(dir: string, children: [string, vscode.FileType][]) {
+        const sorts = await this.sortRules(dir);
+        return children
+            .filter(([name, type]) => IGNORES.indexOf(name) < 0)
+            .sort(([an, at], [bn, bt]) => {
+                var ai = sorts.indexOf(an);
+                var bi = sorts.indexOf(bn);
+                if (ai >= 0 && bi >= 0) {
+                    return ai > bi ? 1 : -1;
+                } else if (ai >= 0 || bi >= 0) {
+                    return ai > bi ? -1 : 1;
+                } else {
+                    if (at === bt) {
+                        return an.localeCompare(bn);
+                    }
+                    return at === vscode.FileType.Directory ? -1 : 1;
+                }
+            })
+            .map(([name, type]) => ({ uri: vscode.Uri.file(path.join(dir, name)), type }));
+    }
+
     // DRAG PROVIDER
     handleDrag?(source: readonly Entry[], dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): void | Thenable<void> {
         dataTransfer.set(FileExplorer.viewId, new vscode.DataTransferItem(source));
@@ -272,21 +303,10 @@ export default class FileExplorer extends Service implements
 
     // TREE PROVIDER
     async getChildren(element?: Entry): Promise<Entry[]> {
-        if (element) {
-            const children = await this.readDirectory(element.uri);
-            return children.filter(([name, type]) => IGNORES.indexOf(name) < 0).map(([name, type]) => ({ uri: vscode.Uri.file(path.join(element.uri.fsPath, name)), type }));
-        }
-        const dir: string = vscode.workspace.getConfiguration('mknote').get('location') ?? "";
-        if (dir.length === 0) { return []; }
-        const workspaceUri = vscode.Uri.file(dir);
-        const children = await this.readDirectory(workspaceUri);
-        children.sort((a, b) => {
-            if (a[1] === b[1]) {
-                return a[0].localeCompare(b[0]);
-            }
-            return a[1] === vscode.FileType.Directory ? -1 : 1;
-        });
-        return children.filter(([name, type]) => IGNORES.indexOf(name) < 0).map(([name, type]) => ({ uri: vscode.Uri.file(path.join(workspaceUri.fsPath, name)), type }));
+        var uri = element ? element.uri : vscode.Uri.file(vscode.workspace.getConfiguration('mknote').get('location') ?? "");;
+        if (uri.fsPath.length === 0) { return []; }
+        const children = await this.readDirectory(uri);
+        return this.parseTreeList(uri.fsPath, children);
     }
 
     getTreeItem(element: Entry): vscode.TreeItem {
@@ -441,6 +461,35 @@ export default class FileExplorer extends Service implements
     @Command('mknote.newWindow')
     openInNewWindow() {
         vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(Config.location));
+    }
+
+    // MOVE
+    @Command('mknote.itemMoveUp')
+    async itemMoveUp(entrys: Entry[]) {
+        const entry = entrys[0];
+        const dir = path.parse(entry.uri.fsPath).dir;
+        let children = await this.getChildren({ uri: vscode.Uri.file(dir), type: vscode.FileType.Directory });
+        var index = children.findIndex(e => e.uri.fsPath === entry.uri.fsPath);
+        if (index === 0) { return; }
+        children[index] = children[index - 1];
+        children[index - 1] = entry;
+        var sorts = children.map(e => path.parse(e.uri.fsPath).base);
+        await _.writefile(path.join(dir, '.sort'), Buffer.from(sorts.join('\n')));
+        vscode.commands.executeCommand('mknote.refresh');
+    }
+
+    @Command('mknote.itemMoveDown')
+    async itemMoveDown(entrys: Entry[]) {
+        const entry = entrys[0];
+        const dir = path.parse(entry.uri.fsPath).dir;
+        let children = await this.getChildren({ uri: vscode.Uri.file(dir), type: vscode.FileType.Directory });
+        var index = children.findIndex(e => e.uri.fsPath === entry.uri.fsPath);
+        if (index === children.length - 1) { return; }
+        children[index] = children[index + 1];
+        children[index + 1] = entry;
+        var sorts = children.map(e => path.parse(e.uri.fsPath).base);
+        await _.writefile(path.join(dir, '.sort'), Buffer.from(sorts.join('\n')));
+        vscode.commands.executeCommand('mknote.refresh');
     }
 
 }

@@ -8,9 +8,12 @@ export class Service {
     static instance: Service;
     static context: vscode.ExtensionContext;
     static viewId: string;
+    static disposes: { dispose(): any }[] = [];
     static setup(context: vscode.ExtensionContext) {
         this.instance = new this(context);
         this.context = context;
+        this.disposes.forEach(e => this.context.subscriptions.push(e));
+
     }
     protected constructor(context: vscode.ExtensionContext) {
     }
@@ -30,14 +33,15 @@ export class Service {
  * @param useContext make command in context
  * @returns 
  */
-export function Command(cmd: string, useContext?: boolean): any {
+export function Command(opt: { cmd: string, useContext?: boolean } | string): any {
+    let { cmd, useContext } = typeof opt === 'object' ? opt : { cmd: opt, useContext: false };
     return function (target: any, methodName: string, descriptor: PropertyDescriptor) {
         const originMethod = descriptor.value;
         const dis = vscode.commands.registerCommand(cmd, (...args: any) => {
-            originMethod.call(target.constructor.instance, args);
+            return originMethod.call(target.constructor.instance, args);
         });
         if (useContext) {
-            target.constructor.context.push(dis);
+            target.constructor.disposes.push(dis);
         }
         return descriptor;
     };
@@ -48,9 +52,10 @@ export type IRunLoading = vscode.ProgressOptions;
 export function RunLoading(opt?: IRunLoading): any {
     return function (target: any, methodName: string, descriptor: PropertyDescriptor) {
         const originalMethod = descriptor.value;
-        descriptor.value = function (...args: any[]) {
+        descriptor.value = function (...args: any) {
             vscode.window.withProgress({
-                location: { viewId: target.constructor.viewId },
+                location: vscode.ProgressLocation.Notification,
+                title: "Runing...",
                 ...(opt ?? {})
             }, (progress, token) => {
                 return originalMethod.call(this, ...args);

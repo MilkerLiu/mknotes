@@ -2,7 +2,7 @@
   "name": "mknote",
   "displayName": "MKNotes",
   "description": "notebook with git sync",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "engines": {
     "vscode": "^1.74.0"
   },
@@ -13,7 +13,7 @@
   ],
   "repository": "https://github.com/MilkerLiu/mknotes.git",
   "main": "./dist/extension.js",
-  "activationEvents":[],
+  "activationEvents": [],
   "contributes": {
     "configuration": {
       "type": "object",
@@ -76,6 +76,16 @@
         "command": "mknote.newWindow",
         "title": "Open In New Window",
         "icon": "$(window)"
+      },
+      {
+        "command": "mknote.itemMoveUp",
+        "title": "Move Up",
+        "icon": "$(arrow-up)"
+      },
+      {
+        "command": "mknote.itemMoveDown",
+        "title": "Move Down",
+        "icon": "$(arrow-down)"
       }
     ],
     "viewsContainers": {
@@ -174,6 +184,16 @@
         }
       ],
       "view/item/context": [
+        {
+          "command": "mknote.itemMoveUp",
+          "when": "view == fileExplorer",
+          "group": "inline"
+        },
+        {
+          "command": "mknote.itemMoveDown",
+          "when": "view == fileExplorer",
+          "group": "inline"
+        },
         {
           "command": "mknote.newItem",
           "group": "1",
