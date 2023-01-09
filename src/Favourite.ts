@@ -1,9 +1,10 @@
 import { Command, Service } from './utils/services';
 import * as vscode from 'vscode';
-import { Entry, FM } from './file';
+import { Entry, FM } from './utils/file';
 import * as path from 'path';
 import Config from './utils/config';
 import * as fs from 'fs';
+import FileExplorer from './FileExplorer';
 
 export default class Favourite extends Service implements vscode.TreeDataProvider<Entry>{
 
@@ -28,7 +29,7 @@ export default class Favourite extends Service implements vscode.TreeDataProvide
         const treeItem = new vscode.TreeItem(element.uri, element.type === vscode.FileType.Directory ?
             vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
         if (element.type === vscode.FileType.File) {
-            treeItem.command = { command: 'mknote.openFile', title: "Open File", arguments: [element.uri], };
+            treeItem.command = { command: 'mknote.fav.select', title: "Open File", arguments: [element.uri], };
             treeItem.contextValue = 'file';
         }
         treeItem.contextValue = path.parse(this.relativePath(element.uri.fsPath)).dir === '/' ? 'root' : 'child';
@@ -99,6 +100,12 @@ export default class Favourite extends Service implements vscode.TreeDataProvide
 
     relativePath(path: string) {
         return path.replace(Config.location, '');
+    }
+
+    @Command('mknote.fav.select')
+    cmdSelect(item: vscode.Uri[]) {
+        FileExplorer.reveal(item[0]);
+        vscode.commands.executeCommand('mknote.openFile', ...item);
     }
 
     @Command('mknote.fav.add')

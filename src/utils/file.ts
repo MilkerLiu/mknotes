@@ -3,7 +3,6 @@ import * as fs from 'fs';
 import * as mkdirp from 'mkdirp';
 import * as rimraf from 'rimraf';
 import * as path from 'path';
-import { basename } from 'path';
 
 export namespace _ {
 
@@ -240,6 +239,17 @@ export namespace FM {
             } as Entry);
         }
         return await sorts(dir, res);
+    }
+
+    export async function entry(uri: vscode.Uri) {
+        var p = path.parse(uri.fsPath);
+        var _stat = await stat(uri.fsPath);
+        return {
+            name: p.base,
+            uri,
+            stat: _stat,
+            type: _stat.type,
+        }
     }
 
     async function sorts(dir: string, items: Entry[]) {

@@ -13,4 +13,5 @@ Features:
 - Open in new window
 - Git bind & sync
 - All ext supports
+- Favourites
 

@@ -5,12 +5,13 @@ import Dialog from './utils/alert';
 import Config from './utils/config';
 import { Command, Service, RunLoading } from './utils/services';
 import open = require('open');
-import { Entry, FM } from './file';
+import { Entry, FM } from './utils/file';
 
 export default class FileExplorer extends Service implements
     vscode.TreeDataProvider<Entry>,
     vscode.TreeDragAndDropController<Entry> {
 
+    static instance: FileExplorer;
     treeView: vscode.TreeView<Entry>;
 
     private _onDidChangeTreeData: vscode.EventEmitter<Entry | undefined> = new vscode.EventEmitter<Entry | undefined>();
@@ -66,6 +67,10 @@ export default class FileExplorer extends Service implements
         return fileUri;
     }
 
+    public static async reveal(entry: vscode.Uri) {
+        this.instance.treeView.reveal(await FM.entry(entry), { select: true, expand: true, focus: true });
+    }
+
     // DRAG PROVIDER
     handleDrag?(source: readonly Entry[], dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): void | Thenable<void> {
         dataTransfer.set(FileExplorer.viewId, new vscode.DataTransferItem(source));
@@ -93,6 +98,12 @@ export default class FileExplorer extends Service implements
         return treeItem;
     }
 
+    getParent(element: Entry): vscode.ProviderResult<Entry> {
+        var dir = path.join(element.uri.fsPath, '..');
+        if (dir === Config.location) { return undefined; }
+        return FM.entry(vscode.Uri.file(dir));
+    }
+
     // COMMADS
 
     @Command("mknote.setFolder")
@@ -101,11 +112,6 @@ export default class FileExplorer extends Service implements
             .then(location => Config.updateLocation(location))
             .then(() => Dialog.showWarningMessage(`You must reload the window for the storage location change to take effect.`))
             .then(res => res === 'Yes' && vscode.commands.executeCommand('workbench.action.reloadWindow'));
-    }
-
-    @Command("mknote.notes.refresh")
-    refresh() {
-        this._onDidChangeTreeData.fire(undefined);
     }
 
     @Command('mknote.openFile')
@@ -122,6 +128,16 @@ export default class FileExplorer extends Service implements
         } else {
             open(path.resolve(resource[0].uri.path, '..'));
         }
+    }
+
+    @Command('mknote.newWindow')
+    openInNewWindow() {
+        vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(Config.location));
+    }
+
+    @Command("mknote.notes.refresh")
+    refresh() {
+        this._onDidChangeTreeData.fire(undefined);
     }
 
     @Command("mknote.notes.newItem")
@@ -230,11 +246,6 @@ export default class FileExplorer extends Service implements
         }
         this.isCopy = false;
         this.selectedFiles = [];
-    }
-
-    @Command('mknote.newWindow')
-    openInNewWindow() {
-        vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(Config.location));
     }
 
     // MOVE
