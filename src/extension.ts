@@ -4,8 +4,10 @@
 import * as vscode from 'vscode';
 import FileExplorer from './FileExplorer';
 import Sync from './Sync';
+import Favourite from './Favourite';
 
 export function activate(context: vscode.ExtensionContext) {
+	Favourite.setup(context);
 	FileExplorer.setup(context);
 	Sync.setup(context);
 }

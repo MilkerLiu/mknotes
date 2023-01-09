@@ -1,187 +1,11 @@
 /* eslint-disable no-throw-literal */
 import * as vscode from 'vscode';
 import * as path from 'path';
-import * as fs from 'fs';
-import * as mkdirp from 'mkdirp';
-import * as rimraf from 'rimraf';
 import Dialog from './utils/alert';
 import Config from './utils/config';
 import { Command, Service, RunLoading } from './utils/services';
 import open = require('open');
-
-namespace _ {
-
-    function handleResult<T>(resolve: (result: T) => void, reject: (error: Error) => void, error: Error | null | undefined, result: T): void {
-        if (error) {
-            reject(massageError(error));
-        } else {
-            resolve(result);
-        }
-    }
-
-    function massageError(error: Error & { code?: string }): Error {
-        if (error.code === 'ENOENT') {
-            return vscode.FileSystemError.FileNotFound();
-        }
-
-        if (error.code === 'EISDIR') {
-            return vscode.FileSystemError.FileIsADirectory();
-        }
-
-        if (error.code === 'EEXIST') {
-            return vscode.FileSystemError.FileExists();
-        }
-
-        if (error.code === 'EPERM' || error.code === 'EACCESS') {
-            return vscode.FileSystemError.NoPermissions();
-        }
-
-        return error;
-    }
-
-    export function checkCancellation(token: vscode.CancellationToken): void {
-        if (token.isCancellationRequested) {
-            throw new Error('Operation cancelled');
-        }
-    }
-
-    export function normalizeNFC(items: string): string;
-    export function normalizeNFC(items: string[]): string[];
-    export function normalizeNFC(items: string | string[]): string | string[] {
-        if (process.platform !== 'darwin') {
-            return items;
-        }
-
-        if (Array.isArray(items)) {
-            return items.map(item => item.normalize('NFC'));
-        }
-
-        return items.normalize('NFC');
-    }
-
-    export function readdir(path: string): Promise<string[]> {
-        return new Promise<string[]>((resolve, reject) => {
-            fs.readdir(path, (error, children) => handleResult(resolve, reject, error, normalizeNFC(children)));
-        });
-    }
-
-    export function stat(path: string): Promise<fs.Stats> {
-        return new Promise<fs.Stats>((resolve, reject) => {
-            fs.stat(path, (error, stat) => handleResult(resolve, reject, error, stat));
-        });
-    }
-
-    export function readfile(path: string): Promise<Buffer> {
-        return new Promise<Buffer>((resolve, reject) => {
-            fs.readFile(path, (error, buffer) => handleResult(resolve, reject, error, buffer));
-        });
-    }
-
-    export function writefile(path: string, content: Buffer): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            fs.writeFile(path, content, error => handleResult(resolve, reject, error, void 0));
-        });
-    }
-
-    export function exists(path: string): Promise<boolean> {
-        return new Promise<boolean>((resolve, reject) => {
-            fs.exists(path, exists => handleResult(resolve, reject, null, exists));
-        });
-    }
-
-    export function rmrf(path: string): Promise<void> {
-        console.log(path)
-        return new Promise<void>((resolve, reject) => {
-            rimraf(path, error => handleResult(resolve, reject, error, void 0));
-        });
-    }
-
-    export function mkdir(path: string): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            mkdirp(path, error => handleResult(resolve, reject, error, void 0));
-        });
-    }
-
-    export function rename(oldPath: string, newPath: string): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            fs.rename(oldPath, newPath, error => handleResult(resolve, reject, error, void 0));
-        });
-    }
-
-    export function unlink(path: string): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            fs.unlink(path, error => handleResult(resolve, reject, error, void 0));
-        });
-    }
-
-    export function move(src: string, targetDir: string): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            const targetPath = path.join(targetDir, path.parse(src).base);
-            if (fs.existsSync(targetPath)) {
-                resolve();
-            } else {
-                fs.rename(src, targetPath, error => handleResult(resolve, reject, error, void 0));
-            }
-        });
-    }
-
-    export function copy(src: string, targetDir: string): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            const targetPath = path.join(targetDir, path.parse(src).base);
-            if (fs.existsSync(targetPath)) {
-                resolve();
-            } else {
-                fs.copyFile(src, targetPath, error => handleResult(resolve, reject, error, void 0));
-            }
-        });
-    }
-}
-
-export class FileStat implements vscode.FileStat {
-
-    constructor(private fsStat: fs.Stats) { }
-
-    get type(): vscode.FileType {
-        return this.fsStat.isFile() ? vscode.FileType.File : this.fsStat.isDirectory() ? vscode.FileType.Directory : this.fsStat.isSymbolicLink() ? vscode.FileType.SymbolicLink : vscode.FileType.Unknown;
-    }
-
-    get isFile(): boolean | undefined {
-        return this.fsStat.isFile();
-    }
-
-    get isDirectory(): boolean | undefined {
-        return this.fsStat.isDirectory();
-    }
-
-    get isSymbolicLink(): boolean | undefined {
-        return this.fsStat.isSymbolicLink();
-    }
-
-    get size(): number {
-        return this.fsStat.size;
-    }
-
-    get ctime(): number {
-        return this.fsStat.ctime.getTime();
-    }
-
-    get mtime(): number {
-        return this.fsStat.mtime.getTime();
-    }
-}
-
-interface Entry {
-    uri: vscode.Uri;
-    type: vscode.FileType;
-}
-
-//#endregion
-
-const IGNORES = [
-    '.git',
-    '.DS_Store',
-    '.sort',
-];
+import { Entry, FM } from './file';
 
 export default class FileExplorer extends Service implements
     vscode.TreeDataProvider<Entry>,
@@ -199,7 +23,7 @@ export default class FileExplorer extends Service implements
 
     protected constructor(context: vscode.ExtensionContext) {
         super(context);
-        FileExplorer.viewId = 'fileExplorer';
+        FileExplorer.viewId = 'notes';
         this.setContext('location', Config.location);
         this.treeView = vscode.window.createTreeView(FileExplorer.viewId, {
             treeDataProvider: this,
@@ -236,59 +60,10 @@ export default class FileExplorer extends Service implements
     }
 
     private async checkExist(fileUri: vscode.Uri) {
-        if (await _.exists(fileUri.path)) {
+        if (await FM.exists(fileUri.path)) {
             throw "A note with that name already exists.";
         }
         return fileUri;
-    }
-
-    async _stat(path: string): Promise<vscode.FileStat> {
-        return new FileStat(await _.stat(path));
-    }
-
-    readDirectory(uri: vscode.Uri): [string, vscode.FileType][] | Thenable<[string, vscode.FileType][]> {
-        return this._readDirectory(uri);
-    }
-
-    async _readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        const children = await _.readdir(uri.fsPath);
-        const result: [string, vscode.FileType][] = [];
-        for (let i = 0; i < children.length; i++) {
-            const child = children[i];
-            const stat = await this._stat(path.join(uri.fsPath, child));
-            result.push([child, stat.type]);
-        }
-        return Promise.resolve(result);
-    }
-
-    async sortRules(dir: string) {
-        try {
-            const res = await _.readfile(path.join(dir, '.sort'));
-            return res.toString().split("\n");
-        } catch {
-            return [];
-        }
-    }
-
-    async parseTreeList(dir: string, children: [string, vscode.FileType][]) {
-        const sorts = await this.sortRules(dir);
-        return children
-            .filter(([name, type]) => IGNORES.indexOf(name) < 0)
-            .sort(([an, at], [bn, bt]) => {
-                var ai = sorts.indexOf(an);
-                var bi = sorts.indexOf(bn);
-                if (ai >= 0 && bi >= 0) {
-                    return ai > bi ? 1 : -1;
-                } else if (ai >= 0 || bi >= 0) {
-                    return ai > bi ? -1 : 1;
-                } else {
-                    if (at === bt) {
-                        return an.localeCompare(bn);
-                    }
-                    return at === vscode.FileType.Directory ? -1 : 1;
-                }
-            })
-            .map(([name, type]) => ({ uri: vscode.Uri.file(path.join(dir, name)), type }));
     }
 
     // DRAG PROVIDER
@@ -303,10 +78,9 @@ export default class FileExplorer extends Service implements
 
     // TREE PROVIDER
     async getChildren(element?: Entry): Promise<Entry[]> {
-        var uri = element ? element.uri : vscode.Uri.file(vscode.workspace.getConfiguration('mknote').get('location') ?? "");;
+        var uri = element ? element.uri : vscode.Uri.file(Config.location);
         if (uri.fsPath.length === 0) { return []; }
-        const children = await this.readDirectory(uri);
-        return this.parseTreeList(uri.fsPath, children);
+        return FM.listDir(uri.fsPath);
     }
 
     getTreeItem(element: Entry): vscode.TreeItem {
@@ -329,7 +103,7 @@ export default class FileExplorer extends Service implements
             .then(res => res === 'Yes' && vscode.commands.executeCommand('workbench.action.reloadWindow'));
     }
 
-    @Command("mknote.refresh")
+    @Command("mknote.notes.refresh")
     refresh() {
         this._onDidChangeTreeData.fire(undefined);
     }
@@ -350,31 +124,31 @@ export default class FileExplorer extends Service implements
         }
     }
 
-    @Command("mknote.newItem")
+    @Command("mknote.notes.newItem")
     newItem() {
         Dialog.showInputBox("File Name")
             .then(name => vscode.Uri.joinPath(this.currentDir, name))
             .then(uri => this.checkExist(uri))
-            .then(fileUri => _.writefile(fileUri.path, Buffer.alloc(0)).then(() => fileUri))
+            .then(fileUri => FM.write(fileUri.path, "").then(() => fileUri))
             .then(fileUri => this.openFile([fileUri]))
             .then(() => vscode.commands.executeCommand('cursorMove', { 'to': 'viewPortBottom' }))
             .catch(err => Dialog.showErrorMessage(err))
             .finally(() => this.refresh());
     }
 
-    @Command("mknote.newGroup")
+    @Command("mknote.notes.newGroup")
     newGroup() {
         Dialog.showInputBox("Group Name")
             .then(name => vscode.Uri.joinPath(this.currentDir, name))
             .then(uri => this.checkExist(uri))
             .then(groupUri => {
-                return _.mkdir(groupUri.path);
+                return FM.mkdir(groupUri.path);
             })
             .catch(err => Dialog.showErrorMessage(err))
             .finally(() => this.refresh());
     }
 
-    @Command("mknote.renameItem")
+    @Command("mknote.notes.renameItem")
     renameItem() {
         if (!this.currentItem) {
             return;
@@ -385,13 +159,13 @@ export default class FileExplorer extends Service implements
             .then(name => vscode.Uri.joinPath(this.currentItemParentDir, name))
             .then(uri => this.checkExist(uri))
             .then(fileUri => {
-                return _.rename(oldPath, fileUri.path);
+                return FM.rename(oldPath, fileUri.path);
             })
             .catch(err => Dialog.showErrorMessage(err))
             .finally(() => this.refresh());
     }
 
-    @Command("mknote.deleteItem")
+    @Command("mknote.notes.deleteItem")
     deleteItem() {
         const files = this.treeView.selection;
         if (files.length === 0) {
@@ -401,7 +175,7 @@ export default class FileExplorer extends Service implements
         Dialog.showWarningMessage(`Are you sure you want to delete '${allFiles}'?`)
             .then(res => {
                 if (res === 'Yes') {
-                    return Promise.all(files.map(e => _.rmrf(e.uri.path))).then(() => true);
+                    return Promise.all(files.map(e => FM.rmrf(e.uri.path))).then(() => true);
                 }
                 return false;
             })
@@ -417,8 +191,9 @@ export default class FileExplorer extends Service implements
             type: vscode.FileType.Directory
         } as Entry;
         const targetDir = target?.type === vscode.FileType.Directory ? target.uri : vscode.Uri.joinPath(target?.uri!, "..");
-        return Promise.all(sources.map(e => _.move(e.uri.path, targetDir.path))).then(() => this.refresh());
+        return Promise.all(sources.map(e => FM.move(e.uri.path, targetDir.path))).then(() => this.refresh());
     }
+
     @RunLoading()
     copy(target: Entry | undefined, sources: Entry[]) {
         target = target ?? {
@@ -426,7 +201,7 @@ export default class FileExplorer extends Service implements
             type: vscode.FileType.Directory
         } as Entry;
         const targetDir = target?.type === vscode.FileType.Directory ? target.uri : vscode.Uri.joinPath(target?.uri!, "..");
-        return Promise.all(sources.map(e => _.copy(e.uri.path, targetDir.path))).then(() => this.refresh());
+        return Promise.all(sources.map(e => FM.copy(e.uri.path, targetDir.path))).then(() => this.refresh());
     }
 
     isCopy = false;
@@ -434,18 +209,18 @@ export default class FileExplorer extends Service implements
     get selectedFiles() { return this._selectedFiles; }
     set selectedFiles(v: Entry[]) { this._selectedFiles = v; this.setContext('sel_files', this._selectedFiles.length > 0); }
 
-    @Command('mknote.copy')
+    @Command('mknote.notes.copy')
     async cmdCopy() {
         this.selectedFiles = [...this.treeView.selection];
         this.isCopy = true;
     }
-    @Command('mknote.cut')
+    @Command('mknote.notes.cut')
     async cmdCut() {
         this.isCopy = false;
         this.selectedFiles = [...this.treeView.selection];
     }
 
-    @Command('mknote.paste')
+    @Command('mknote.notes.paste')
     async cmdPaste() {
         if (this.selectedFiles.length === 0) { return; };
         if (this.isCopy) {
@@ -457,39 +232,38 @@ export default class FileExplorer extends Service implements
         this.selectedFiles = [];
     }
 
-
     @Command('mknote.newWindow')
     openInNewWindow() {
         vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(Config.location));
     }
 
     // MOVE
-    @Command('mknote.itemMoveUp')
+    @Command('mknote.notes.moveUp')
     async itemMoveUp(entrys: Entry[]) {
         const entry = entrys[0];
         const dir = path.parse(entry.uri.fsPath).dir;
-        let children = await this.getChildren({ uri: vscode.Uri.file(dir), type: vscode.FileType.Directory });
+        let children = await FM.listDir(dir);
         var index = children.findIndex(e => e.uri.fsPath === entry.uri.fsPath);
         if (index === 0) { return; }
         children[index] = children[index - 1];
         children[index - 1] = entry;
         var sorts = children.map(e => path.parse(e.uri.fsPath).base);
-        await _.writefile(path.join(dir, '.sort'), Buffer.from(sorts.join('\n')));
-        vscode.commands.executeCommand('mknote.refresh');
+        await FM.write(path.join(dir, '.sort'), sorts.join('\n'));
+        vscode.commands.executeCommand('mknote.notes.refresh');
     }
 
-    @Command('mknote.itemMoveDown')
+    @Command('mknote.notes.moveDown')
     async itemMoveDown(entrys: Entry[]) {
         const entry = entrys[0];
         const dir = path.parse(entry.uri.fsPath).dir;
-        let children = await this.getChildren({ uri: vscode.Uri.file(dir), type: vscode.FileType.Directory });
+        let children = await FM.listDir(dir);
         var index = children.findIndex(e => e.uri.fsPath === entry.uri.fsPath);
         if (index === children.length - 1) { return; }
         children[index] = children[index + 1];
         children[index + 1] = entry;
         var sorts = children.map(e => path.parse(e.uri.fsPath).base);
-        await _.writefile(path.join(dir, '.sort'), Buffer.from(sorts.join('\n')));
-        vscode.commands.executeCommand('mknote.refresh');
+        await FM.write(path.join(dir, '.sort'), sorts.join('\n'));
+        vscode.commands.executeCommand('mknote.notes.refresh');
     }
 
 }

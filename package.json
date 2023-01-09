@@ -2,7 +2,7 @@
   "name": "mknote",
   "displayName": "MKNotes",
   "description": "notebook with git sync",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "engines": {
     "vscode": "^1.74.0"
   },
@@ -29,38 +29,38 @@
     },
     "commands": [
       {
-        "command": "mknote.newItem",
+        "command": "mknote.notes.newItem",
         "title": "New File",
         "icon": "$(new-file)"
       },
       {
-        "command": "mknote.newGroup",
+        "command": "mknote.notes.newGroup",
         "title": "New Group",
         "icon": "$(new-folder)"
       },
       {
-        "command": "mknote.refresh",
+        "command": "mknote.notes.refresh",
         "title": "Refresh",
         "icon": "$(extensions-refresh)"
       },
       {
-        "command": "mknote.renameItem",
+        "command": "mknote.notes.renameItem",
         "title": "Rename"
       },
       {
-        "command": "mknote.deleteItem",
+        "command": "mknote.notes.deleteItem",
         "title": "Delete"
       },
       {
-        "command": "mknote.copy",
+        "command": "mknote.notes.copy",
         "title": "Copy"
       },
       {
-        "command": "mknote.cut",
+        "command": "mknote.notes.cut",
         "title": "Cut"
       },
       {
-        "command": "mknote.paste",
+        "command": "mknote.notes.paste",
         "title": "Paste"
       },
       {
@@ -78,12 +78,37 @@
         "icon": "$(window)"
       },
       {
-        "command": "mknote.itemMoveUp",
+        "command": "mknote.notes.moveUp",
         "title": "Move Up",
         "icon": "$(arrow-up)"
       },
       {
-        "command": "mknote.itemMoveDown",
+        "command": "mknote.notes.moveDown",
+        "title": "Move Down",
+        "icon": "$(arrow-down)"
+      },
+      {
+        "command": "mknote.fav.add",
+        "title": "Favourites Add",
+        "icon": "$(star)"
+      },
+      {
+        "command": "mknote.fav.remove",
+        "title": "Favourites Remove",
+        "icon": "$(star-full)"
+      },
+      {
+        "command": "mknote.fav.refresh",
+        "title": "Favourites Refresh",
+        "icon": "$(extensions-refresh)"
+      },
+      {
+        "command": "mknote.fav.moveUp",
+        "title": "Move Up",
+        "icon": "$(arrow-up)"
+      },
+      {
+        "command": "mknote.fav.moveDown",
         "title": "Move Down",
         "icon": "$(arrow-down)"
       }
@@ -99,7 +124,7 @@
     },
     "viewsWelcome": [
       {
-        "view": "fileExplorer",
+        "view": "notes",
         "contents": "In order to use MKNOTE, you can open a folder or clone from a URL.\n[Open Folder](command:mknote.setFolder)\n[Clone Repository](command:mknote.repo.setup)",
         "when": "location == ''"
       }
@@ -107,8 +132,13 @@
     "views": {
       "notes": [
         {
-          "id": "fileExplorer",
+          "id": "notes",
           "name": "Notes",
+          "icon": "breakpoints-activate"
+        },
+        {
+          "id": "favourite",
+          "name": "Favourite",
           "icon": "breakpoints-activate"
         }
       ]
@@ -116,19 +146,19 @@
     "menus": {
       "commandPalette": [
         {
-          "command": "mknote.newItem",
+          "command": "mknote.notes.newItem",
           "when": "false"
         },
         {
-          "command": "mknote.newGroup",
+          "command": "mknote.notes.newGroup",
           "when": "false"
         },
         {
-          "command": "mknote.renameItem",
+          "command": "mknote.notes.renameItem",
           "when": "false"
         },
         {
-          "command": "mknote.deleteItem",
+          "command": "mknote.notes.deleteItem",
           "when": "false"
         },
         {
@@ -136,19 +166,19 @@
           "when": "false"
         },
         {
-          "command": "mknote.copy",
+          "command": "mknote.notes.copy",
           "when": "false"
         },
         {
-          "command": "mknote.cut",
+          "command": "mknote.notes.cut",
           "when": "false"
         },
         {
-          "command": "mknote.paste",
+          "command": "mknote.notes.paste",
           "when": "false"
         },
         {
-          "command": "mknote.refresh",
+          "command": "mknote.notes.refresh",
           "when": "false"
         },
         {
@@ -158,81 +188,101 @@
       ],
       "view/title": [
         {
-          "command": "mknote.newItem",
-          "when": "view == fileExplorer",
+          "command": "mknote.notes.newItem",
+          "when": "view == notes",
           "group": "navigation@1"
         },
         {
-          "command": "mknote.newGroup",
-          "when": "view == fileExplorer",
+          "command": "mknote.notes.newGroup",
+          "when": "view == notes",
           "group": "navigation@2"
         },
         {
-          "command": "mknote.refresh",
-          "when": "view == fileExplorer",
+          "command": "mknote.notes.refresh",
+          "when": "view == notes",
           "group": "navigation@3"
         },
         {
           "command": "mknote.repo.sync",
-          "when": "view == fileExplorer",
+          "when": "view == notes",
           "group": "navigation@4"
         },
         {
           "command": "mknote.newWindow",
-          "when": "view == fileExplorer",
+          "when": "view == notes",
           "group": "navigation@4"
         }
       ],
       "view/item/context": [
         {
-          "command": "mknote.itemMoveUp",
-          "when": "view == fileExplorer",
+          "command": "mknote.notes.moveUp",
+          "when": "view == notes",
           "group": "inline"
         },
         {
-          "command": "mknote.itemMoveDown",
-          "when": "view == fileExplorer",
+          "command": "mknote.notes.moveDown",
+          "when": "view == notes",
           "group": "inline"
         },
         {
-          "command": "mknote.newItem",
-          "group": "1",
-          "when": "view == fileExplorer"
+          "command": "mknote.fav.add",
+          "when": "view == notes",
+          "group": "inline"
         },
         {
-          "command": "mknote.newGroup",
+          "command": "mknote.notes.newItem",
           "group": "1",
-          "when": "view == fileExplorer"
+          "when": "view == notes"
         },
         {
-          "command": "mknote.renameItem",
-          "when": "view == fileExplorer",
+          "command": "mknote.notes.newGroup",
+          "group": "1",
+          "when": "view == notes"
+        },
+        {
+          "command": "mknote.notes.renameItem",
+          "when": "view == notes",
           "group": "1"
         },
         {
-          "command": "mknote.copy",
-          "when": "view == fileExplorer",
+          "command": "mknote.notes.copy",
+          "when": "view == notes",
           "group": "2"
         },
         {
-          "command": "mknote.cut",
-          "when": "view == fileExplorer",
+          "command": "mknote.notes.cut",
+          "when": "view == notes",
           "group": "2"
         },
         {
-          "command": "mknote.paste",
-          "when": "view == fileExplorer && sel_files",
+          "command": "mknote.notes.paste",
+          "when": "view == notes && sel_files",
           "group": "2"
         },
         {
           "command": "mknote.revealInFinder",
-          "when": "view == fileExplorer",
+          "when": "view == notes",
           "group": "3"
         },
         {
-          "command": "mknote.deleteItem",
-          "when": "view == fileExplorer",
+          "command": "mknote.notes.deleteItem",
+          "when": "view == notes",
           "group": "4"
+        },
+        {
+          "command": "mknote.fav.moveUp",
+          "when": "view == favourite",
+          "group": "inline"
+        },
+        {
+          "command": "mknote.fav.moveDown",
+          "when": "view == favourite",
+          "group": "inline"
+        },
+        {
+          "command": "mknote.fav.remove",
+          "when": "view == favourite && viewItem == root",
+          "group": "inline"
         }
       ]
     },
@@ -241,19 +291,19 @@
         "command": "mknote.copy",
         "key": "ctrl+c",
         "mac": "cmd+c",
-        "when": "view == fileExplorer"
+        "when": "view == notes"
       },
       {
         "command": "mknote.cut",
         "key": "ctrl+x",
         "mac": "cmd+x",
-        "when": "view == fileExplorer"
+        "when": "view == notes"
       },
       {
         "command": "mknote.paste",
         "key": "ctrl+v",
         "mac": "cmd+v",
-        "when": "view == fileExplorer"
+        "when": "view == notes"
       }
     ]
   },

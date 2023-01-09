@@ -85,7 +85,6 @@ export default class Sync extends Service {
             vscode.window.showInformationMessage(`Successfully`);
 
         } catch (error) {
-            console.log(error);
             vscode.window.showErrorMessage(`${error}`);
         }
     }
