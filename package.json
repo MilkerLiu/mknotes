@@ -2,7 +2,7 @@
   "name": "mknote",
   "displayName": "MKNotes",
   "description": "notebook with git sync",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "engines": {
     "vscode": "^1.74.0"
   },
@@ -185,6 +185,26 @@
         {
           "command": "mknote.revealInFinder",
           "when": "false"
+        },
+        {
+          "command": "mknote.fav.add",
+          "when": "false"
+        },
+        {
+          "command": "mknote.fav.remove",
+          "when": "false"
+        },
+        {
+          "command": "mknote.fav.refresh",
+          "when": "false"
+        },
+        {
+          "command": "mknote.fav.moveUp",
+          "when": "false"
+        },
+        {
+          "command": "mknote.fav.moveDown",
+          "when": "false"
         }
       ],
       "view/title": [
@@ -289,19 +309,19 @@
     },
     "keybindings": [
       {
-        "command": "mknote.copy",
+        "command": "mknote.notes.copy",
         "key": "ctrl+c",
         "mac": "cmd+c",
         "when": "view == notes"
       },
       {
-        "command": "mknote.cut",
+        "command": "mknote.notes.cut",
         "key": "ctrl+x",
         "mac": "cmd+x",
         "when": "view == notes"
       },
       {
-        "command": "mknote.paste",
+        "command": "mknote.notes.paste",
         "key": "ctrl+v",
         "mac": "cmd+v",
         "when": "view == notes"
