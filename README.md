@@ -2,16 +2,22 @@
 
 A sidebar notebook.
 
-![intro](https://user-images.githubusercontent.com/5998498/210298425-4f5b16cf-4bca-4bbe-9e9d-f2f455282b5f.png)
+![image](https://user-images.githubusercontent.com/5998498/211450368-e95399b3-cd6c-4f1e-92eb-6903764fbc3f.png)
 
-Features:
+### Features
 
-- Side-Bar Notes
+- Side-Bar icon
 - New File / New Group
 - Move / Copy / Paste / Delete / Drag / Rename
-- Reveal in finder
+- Reveal in Finder
 - Open in new window
 - Git bind & sync
-- All ext supports
-- Favourites
+- All files supports: drawio,markdown,script,mindmap,...
+  - drawio: install `vscode-drawio` extension
+  - mindmap: install `vscode-mindmap` extension
+- **Favourites**
+- **Sorts**
 
+### Settings
+
+![image](https://user-images.githubusercontent.com/5998498/211450504-2f6687a0-38bc-46d4-b1bc-61d801b39ada.png)
