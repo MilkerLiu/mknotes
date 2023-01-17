@@ -169,6 +169,7 @@ export interface Entry {
     name: string;
     stat: FileStat;
     type: vscode.FileType;
+    isFavourite?: boolean;
 }
 
 //#endregion

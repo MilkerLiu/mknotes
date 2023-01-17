@@ -6,6 +6,7 @@ import Config from './utils/config';
 import { Command, Service, RunLoading } from './utils/services';
 import open = require('open');
 import { Entry, FM } from './utils/file';
+import Favourite from './Favourite';
 
 export default class FileExplorer extends Service implements
     vscode.TreeDataProvider<Entry>,
@@ -93,8 +94,8 @@ export default class FileExplorer extends Service implements
             vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
         if (element.type === vscode.FileType.File) {
             treeItem.command = { command: 'mknote.openFile', title: "Open File", arguments: [element.uri], };
-            treeItem.contextValue = 'file';
         }
+        treeItem.contextValue = (Favourite.instance as Favourite).isFavourite(element.uri.fsPath) ? "fav" : "null";
         return treeItem;
     }
 

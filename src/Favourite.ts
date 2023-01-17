@@ -25,6 +25,11 @@ export default class Favourite extends Service implements vscode.TreeDataProvide
         this._favourites = this.favourites();
     }
 
+    public isFavourite(p: string) {
+        console.log(this._favourites, p);
+        return this._favourites.indexOf(this.relativePath(p)) >= 0;
+    }
+
     getTreeItem(element: Entry): vscode.TreeItem | Thenable<vscode.TreeItem> {
         const treeItem = new vscode.TreeItem(element.uri, element.type === vscode.FileType.Directory ?
             vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
@@ -32,7 +37,7 @@ export default class Favourite extends Service implements vscode.TreeDataProvide
             treeItem.command = { command: 'mknote.fav.select', title: "Open File", arguments: [element.uri], };
             treeItem.contextValue = 'file';
         }
-        treeItem.contextValue = path.parse(this.relativePath(element.uri.fsPath)).dir === '/' ? 'root' : 'child';
+        treeItem.contextValue = this.isFavourite(element.uri.fsPath) ? "fav" : "null";
         return treeItem;
     }
 
@@ -63,7 +68,8 @@ export default class Favourite extends Service implements vscode.TreeDataProvide
         var ws = Config.location;
         if (ws.length === 0) { return []; }
         var favouritePath = path.join(ws, '.favourite');
-        FM.write(favouritePath, this.check(list).join("\n"));
+        this._favourites = this.check(list);
+        FM.write(favouritePath, this._favourites.join("\n"));
     }
 
     async favouriteList(): Promise<Entry[]> {
@@ -85,7 +91,8 @@ export default class Favourite extends Service implements vscode.TreeDataProvide
                         name: child,
                         stat: _stat,
                         uri: vscode.Uri.file(p),
-                        type: _stat.type
+                        type: _stat.type,
+                        isFavourite: true
                     } as Entry);
                 } catch {
                     continue;
@@ -117,6 +124,7 @@ export default class Favourite extends Service implements vscode.TreeDataProvide
         favourites.push(relativePath);
         this.saveFavourites(favourites);
         vscode.commands.executeCommand('mknote.fav.refresh');
+        vscode.commands.executeCommand('mknote.notes.refresh');
     }
 
     @Command('mknote.fav.remove')
@@ -126,6 +134,7 @@ export default class Favourite extends Service implements vscode.TreeDataProvide
         let favourites = await this.favourites();
         await this.saveFavourites(favourites.filter(e => relativePath !== e));
         vscode.commands.executeCommand('mknote.fav.refresh');
+        vscode.commands.executeCommand('mknote.notes.refresh');
     }
 
     @Command('mknote.fav.moveUp')
