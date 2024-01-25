@@ -7,6 +7,7 @@ import * as path from 'path';
 import { promisify } from 'util';
 import { exec } from 'child_process';
 import { Command, RunLoading, Service } from './utils/services';
+import { Entry, FM } from './utils/file';
 
 const _exec = promisify(exec);
 
@@ -61,26 +62,28 @@ export default class Sync extends Service {
     @RunLoading()
     async repoSync() {
         try {
-            const repo = await this.git.openRepository(vscode.Uri.file(Config.location));
-            if (!repo) {
+            // if file
+            let gitUri = vscode.Uri.file(`${Config.location}/.git`)
+            if (await !FM.exists(gitUri.path)) {
                 throw "Please init your folder with git";
             }
-            const origin = await this.gitRemote();
-            if (!origin) {
+
+            var res = await _exec('git remote', {cwd: Config.location});
+            var items = res.stdout.split('\n')
+            if (items.length == 0) {
                 throw 'Please setup your git-repo with remote';
             }
+            var remote = items[0]
+            console.log(`remote ${remote}`)
 
-            const branch = repo?.state.HEAD;
-            if (!branch?.upstream) {
-                throw 'Please setup your branch with upstream';
-            }
+            var res = await _exec('git rev-parse --abbrev-ref HEAD', {cwd: Config.location});
+            var items = res.stdout.split('\n')
+            var branch = items[0]
 
-            if (repo?.state.workingTreeChanges.length) {
-                await repo?.add([Config.location]);
-                await repo?.commit((new Date()).toLocaleString());
-            }
-            await repo?.pull();
-            await repo?.push('origin');
+            await _exec(`git add .`, {cwd: Config.location});
+            await _exec(`git commit -m '${(new Date()).toLocaleString()}'`, {cwd: Config.location});
+            await _exec(`git pull ${remote} ${branch}`, {cwd: Config.location});
+            await _exec(`git push ${remote} ${branch}`, {cwd: Config.location});
 
             vscode.window.showInformationMessage(`Successfully`);
 
