@@ -80,10 +80,12 @@ export default class Sync extends Service {
             var items = res.stdout.split('\n')
             var branch = items[0]
 
-            await _exec(`git add .`, {cwd: Config.location});
-            await _exec(`git commit -m '${(new Date()).toLocaleString()}'`, {cwd: Config.location});
-            await _exec(`git pull ${remote} ${branch}`, {cwd: Config.location});
-            await _exec(`git push ${remote} ${branch}`, {cwd: Config.location});
+            try {
+                await _exec(`git add .`, {cwd: Config.location});
+                await _exec(`git commit -m '${(new Date()).toLocaleString()}'`, {cwd: Config.location});
+                await _exec(`git pull ${remote} ${branch}`, {cwd: Config.location});
+                await _exec(`git push ${remote} ${branch}`, {cwd: Config.location});
+            } catch {}
 
             vscode.window.showInformationMessage(`Successfully`);
 
